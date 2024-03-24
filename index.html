@@ -60,18 +60,14 @@
 <script type="text/javascript">
   (function () {
     const encodingCompressMapper = {
-      raw: LZString.compressToUTF16,
+      base64: LZString.compressToBase64,
       utf16: LZString.compressToUTF16,
       uint8array: LZString.compressToUint8Array,
-      encodeuri: LZString.compressToEncodedURIComponent,
-      base64: LZString.compressToBase64,
     };
     const encodingDecompressMapper = {
-      raw: LZString.decompressFromUTF16,
+      base64: LZString.decompressFromBase64,
       utf16: LZString.decompressFromUTF16,
       uint8array: LZString.decompressFromUint8Array,
-      encodeuri: LZString.decompressFromEncodedURIComponent,
-      base64: LZString.decompressFromBase64,
     };
 
     let encText = document.getElementById("encode");
@@ -80,28 +76,21 @@
     let encGroup = encText.parentElement;
     let decGroup = decText.parentElement;
     const handleDecode = () => {
-      try {
-        decGroup.classList.remove("has-error");
-
-        // try selected encoding first, then try all encodings
-        let encoding = document.getElementById("encoding").value;
-        encText.value = encodingDecompressMapper[encoding](decText.value);
-
-      } catch (e) {
-        decGroup.classList.add("has-error");
+      decGroup.classList.remove("has-error");
+      let encoding = document.getElementById("encoding").value;
+      encText.value = encodingDecompressMapper[encoding](decText.value);
+      if (!encText.value)
         for (let encoding in encodingDecompressMapper) {
-          try {
-            decGroup.classList.remove("has-error");
+          decGroup.classList.remove("has-error");
 
-            encText.value = encodingDecompressMapper[encoding](decText.value);
-            document.getElementById("encoding").value = encoding;
-            break;
-          } catch (e) {
-            continue;
-          }
-
+          encText.value = encodingDecompressMapper[encoding](decText.value);
+          document.getElementById("encoding").value = encoding;
+            if (encText.value) {
+              // select the correct encoding in the dropdown
+                document.getElementById("encoding").value = encoding;
+              break;
+            }
         }
-      }
     };
     const handleEncode = () => {
       decGroup.classList.remove("has-error");
