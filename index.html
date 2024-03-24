@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
     <title>LZ-String Base64 encoder and decoder</title>
@@ -38,7 +38,7 @@
                             ></textarea>
                         </div>
                         <div class="form-group">
-                            <label class="control-label" for="encode">Encoding</label>
+                            <label for="encoding" class="control-label">Encoding</label>
                             <select id="encoding" class="form-control">
                                 <!--<option value="raw">Raw</option>-->
                                 <option value="uint8array">Uint8Array</option>
@@ -73,7 +73,7 @@
     let encText = document.getElementById("encode");
     let decText = document.getElementById("decode");
     let encodingSelect = document.getElementById("encoding");
-    let encGroup = encText.parentElement;
+    // let encGroup = encText.parentElement;
     let decGroup = decText.parentElement;
     const handleDecode = () => {
       decGroup.classList.remove("has-error");
