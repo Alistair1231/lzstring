@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <title>LZ-String Base64 encoder and decoder</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+      integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+      crossorigin="anonymous"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+  </head>
+  <body>
+    <div class="container body-content">
+      <header class="page-header">
+        <h1>LZ-String Base64 encoder and decoder</h1>
+      </header>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel">
+            <div class="panel-body">
+              <form class="form-horizontal">
+                <div class="form-group">
+                  <label class="control-label" for="decode">Decode</label>
+                  <textarea
+                    id="decode"
+                    class="form-control"
+                    placeholder="Paste to decode"
+                  ></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="control-label" for="encode">Encode</label>
+                  <textarea
+                    id="encode"
+                    class="form-control"
+                    placeholder="Paste to encode"
+                  ></textarea>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr class="featurette-divider" />
+      <footer>
+        <p>&copy; lz.qaaq.cc</p>
+      </footer>
+    </div>
+    <script type="text/javascript">
+      (function () {
+        function b64EncodeUnicode(str) {
+          return LZString.compressToBase64(
+            encodeURIComponent(str).replace(
+              /%([0-9A-F]{2})/g,
+              function (match, p1) {
+                return String.fromCharCode("0x" + p1);
+              }
+            )
+          );
+        }
+
+        function b64DecodeUnicode(str) {
+          return decodeURIComponent(
+            Array.prototype.map
+              .call(LZString.decompressFromBase64(str), function (c) {
+                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+              })
+              .join("")
+          );
+        }
+
+        var enc = document.getElementById("encode");
+        var dec = document.getElementById("decode");
+        var encGroup = enc.parentElement;
+        var decGroup = dec.parentElement;
+
+        dec.addEventListener(
+          "input",
+          function () {
+            try {
+              decGroup.classList.remove("has-error");
+              enc.value = LZString.decompressFromBase64(dec.value);
+            } catch (e) {
+              console.log("Unable to decode as UTF-8 string!");
+              try {
+                enc.value = atob(dec.value);
+              } catch (ee) {
+                console.log(ee);
+                console.log("Invalid base64 string!");
+                decGroup.classList.add("has-error");
+              }
+            }
+          },
+          false
+        );
+
+        enc.addEventListener(
+          "input",
+          function () {
+            decGroup.classList.remove("has-error");
+            dec.value = LZString.compressToBase64(enc.value);
+          },
+          false
+        );
+      })();
+    </script>
+  </body>
+</html>
+
