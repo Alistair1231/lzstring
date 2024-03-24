@@ -1,110 +1,127 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
     <title>LZ-String Base64 encoder and decoder</title>
     <link
-      rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-      integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
-      crossorigin="anonymous"
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+            integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+            crossorigin="anonymous"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
-  </head>
-  <body>
-    <div class="container body-content">
-      <header class="page-header">
+</head>
+<body>
+<div class="container body-content">
+    <header class="page-header">
         <h1>LZ-String Base64 encoder and decoder</h1>
-      </header>
-      <div class="row">
+    </header>
+    <div class="row">
         <div class="col-md-12">
-          <div class="panel">
-            <div class="panel-body">
-              <form class="form-horizontal">
-                <div class="form-group">
-                  <label class="control-label" for="decode">Decode</label>
-                  <textarea
-                    id="decode"
-                    class="form-control"
-                    placeholder="Paste to decode"
-                  ></textarea>
+            <div class="panel">
+                <div class="panel-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label" for="decode">Decode</label>
+                            <textarea
+                                    id="decode"
+                                    class="form-control"
+                                    placeholder="Paste to decode"
+                            ></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="encode">Encode</label>
+                            <textarea
+                                    id="encode"
+                                    class="form-control"
+                                    placeholder="Paste to encode"
+                            ></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="encode">Encoding</label>
+                            <select id="encoding" class="form-control">
+                                <!--<option value="raw">Raw</option>-->
+                                <option value="utf16">UTF-16</option>
+                                <option value="uint8array">Uint8Array</option>
+                                <!--<option value="encodeuri">EncodeURI</option>-->
+                                <option value="base64" selected>Base64</option>
+                            </select>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-group">
-                  <label class="control-label" for="encode">Encode</label>
-                  <textarea
-                    id="encode"
-                    class="form-control"
-                    placeholder="Paste to encode"
-                  ></textarea>
-                </div>
-              </form>
             </div>
-          </div>
         </div>
-      </div>
-      <hr class="featurette-divider" />
-      <footer>
-        <p>&copy; lz.qaaq.cc</p>
-      </footer>
     </div>
-    <script type="text/javascript">
-      (function () {
-        function b64EncodeUnicode(str) {
-          return LZString.compressToBase64(
-            encodeURIComponent(str).replace(
-              /%([0-9A-F]{2})/g,
-              function (match, p1) {
-                return String.fromCharCode("0x" + p1);
-              }
-            )
-          );
-        }
+    <hr class="featurette-divider"/>
+    <footer>
+        <p>&copy; lz.qaaq.cc -- inspiration and html/js starting point from base64.io</p>
+    </footer>
+</div>
+<script type="text/javascript">
+  (function () {
+    const encodingCompressMapper = {
+      raw: LZString.compressToUTF16,
+      utf16: LZString.compressToUTF16,
+      uint8array: LZString.compressToUint8Array,
+      encodeuri: LZString.compressToEncodedURIComponent,
+      base64: LZString.compressToBase64,
+    };
+    const encodingDecompressMapper = {
+      raw: LZString.decompressFromUTF16,
+      utf16: LZString.decompressFromUTF16,
+      uint8array: LZString.decompressFromUint8Array,
+      encodeuri: LZString.decompressFromEncodedURIComponent,
+      base64: LZString.decompressFromBase64,
+    };
 
-        function b64DecodeUnicode(str) {
-          return decodeURIComponent(
-            Array.prototype.map
-              .call(LZString.decompressFromBase64(str), function (c) {
-                return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-              })
-              .join("")
-          );
-        }
+    let encText = document.getElementById("encode");
+    let decText = document.getElementById("decode");
+    let encodingSelect = document.getElementById("encoding");
+    let encGroup = encText.parentElement;
+    let decGroup = decText.parentElement;
+    const handleDecode = () => {
+      try {
+        decGroup.classList.remove("has-error");
 
-        var enc = document.getElementById("encode");
-        var dec = document.getElementById("decode");
-        var encGroup = enc.parentElement;
-        var decGroup = dec.parentElement;
+        // try selected encoding first, then try all encodings
+        let encoding = document.getElementById("encoding").value;
+        encText.value = encodingDecompressMapper[encoding](decText.value);
 
-        dec.addEventListener(
-          "input",
-          function () {
-            try {
-              decGroup.classList.remove("has-error");
-              enc.value = LZString.decompressFromBase64(dec.value);
-            } catch (e) {
-              console.log("Unable to decode as UTF-8 string!");
-              try {
-                enc.value = atob(dec.value);
-              } catch (ee) {
-                console.log(ee);
-                console.log("Invalid base64 string!");
-                decGroup.classList.add("has-error");
-              }
-            }
-          },
-          false
-        );
-
-        enc.addEventListener(
-          "input",
-          function () {
+      } catch (e) {
+        decGroup.classList.add("has-error");
+        for (let encoding in encodingDecompressMapper) {
+          try {
             decGroup.classList.remove("has-error");
-            dec.value = LZString.compressToBase64(enc.value);
-          },
-          false
-        );
-      })();
-    </script>
-  </body>
+
+            encText.value = encodingDecompressMapper[encoding](decText.value);
+            document.getElementById("encoding").value = encoding;
+            break;
+          } catch (e) {
+            continue;
+          }
+
+        }
+      }
+    };
+    const handleEncode = () => {
+      decGroup.classList.remove("has-error");
+      let encoding = document.getElementById("encoding").value;
+      decText.value = encodingCompressMapper[encoding](encText.value);
+    }
+
+    const handleEither = () => {
+      if (encText.value) {
+        handleEncode();
+      } else {
+        handleDecode();
+      }
+    }
+
+    decText.addEventListener("input", handleDecode, false);
+    encText.addEventListener("input", handleEncode, false);
+    encodingSelect.addEventListener("change", handleEither, false);
+  })();
+</script>
+</body>
 </html>
 
