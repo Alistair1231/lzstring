@@ -10,6 +10,7 @@
             crossorigin="anonymous"
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.2.2/otpauth.umd.min.js"></script>
 </head>
 <body>
 <div class="container body-content">
@@ -60,85 +61,94 @@
 </div>
 <script type="text/javascript">
   (function () {
-      // uint8array to hex string
-      function buf2hex(buffer) {
-        return Array.prototype.map.call(
-          new Uint8Array(buffer), x => (
-            '00' + x.toString(16))
-            .slice(-2))
-          .join(' ');
-      }
+    // uint8array to hex string
+    function buf2hex(buffer) {
+      return Array.prototype.map.call(
+        new Uint8Array(buffer), x => (
+          '00' + x.toString(16))
+          .slice(-2))
+        .join(' ');
+    }
 
-      // hex string to uint8array
-      function hex2buf(hexString) {
-        return new Uint8Array(hexString.match(/[\d\w]{2}(?=\s*)/g)
-          .map(byte => parseInt(byte, 16)));
-      }
+    // hex string to uint8array
+    function hex2buf(hexString) {
+      return new Uint8Array(hexString.match(/[\d\w]{2}(?=\s*)/g)
+        .map(byte => parseInt(byte, 16)));
+    }
 
-      window.LZString = LZString;
-      window.hex2buf = hex2buf;
-      window.buf2hex = buf2hex;
+    window.LZString = LZString;
+    window.hex2buf = hex2buf;
+    window.buf2hex = buf2hex;
 
 
-      const encodingCompressMapper = {
-        base64: LZString.compressToBase64,
-        utf16: LZString.compressToUTF16,
-        uint8array: x => LZString.compressToUint8Array(x).toString().replaceAll(',', ' '),
-        uint8arrayHex: x => buf2hex(LZString.compressToUint8Array(x)),
-      };
-      const encodingDecompressMapper = {
-        base64: LZString.decompressFromBase64,
-        utf16: LZString.decompressFromUTF16,
-        uint8array: x => LZString.decompressFromUint8Array(x.split(' ').map(x => parseInt(x))),
-        uint8arrayHex: x => LZString.decompressFromUint8Array(hex2buf(x)),
-      };
+    const encodingCompressMapper = {
+      base64: LZString.compressToBase64,
+      utf16: LZString.compressToUTF16,
+      uint8array: x => LZString.compressToUint8Array(x).toString().replaceAll(',', ' '),
+      uint8arrayHex: x => buf2hex(LZString.compressToUint8Array(x)),
+    };
+    const encodingDecompressMapper = {
+      base64: LZString.decompressFromBase64,
+      utf16: LZString.decompressFromUTF16,
+      uint8array: x => LZString.decompressFromUint8Array(x.split(' ').map(x => parseInt(x))),
+      uint8arrayHex: x => LZString.decompressFromUint8Array(hex2buf(x)),
+    };
 
-      let encText = document.getElementById("encode");
-      let decText = document.getElementById("decode");
-      let encodingSelect = document.getElementById("encoding");
-      // let encGroup = encText.parentElement;
-      let decGroup = decText.parentElement;
+    let encText = document.getElementById("encode");
+    let decText = document.getElementById("decode");
+    let encodingSelect = document.getElementById("encoding");
+    // let encGroup = encText.parentElement;
+    let decGroup = decText.parentElement;
 
-      const handleDecode = () => {
-        decGroup.classList.remove("has-error");
-        encText.value = "";
-        let encoding = document.getElementById("encoding").value;
-        encText.value = encodingDecompressMapper[encoding](decText.value);
-        if (!encText.value) {
-          for (let encoding in encodingDecompressMapper) {
-            decGroup.classList.remove("has-error");
+    const handleDecode = () => {
+      decGroup.classList.remove("has-error");
+      encText.value = "";
+      let encoding = document.getElementById("encoding").value;
+      encText.value = encodingDecompressMapper[encoding](decText.value);
+      if (!encText.value) {
+        for (let encoding in encodingDecompressMapper) {
+          decGroup.classList.remove("has-error");
 
-            encText.value = encodingDecompressMapper[encoding](decText.value);
+          encText.value = encodingDecompressMapper[encoding](decText.value);
+          document.getElementById("encoding").value = encoding;
+          if (encText.value) {
+            // select the correct encoding in the dropdown
             document.getElementById("encoding").value = encoding;
-            if (encText.value) {
-              // select the correct encoding in the dropdown
-              document.getElementById("encoding").value = encoding;
-              break;
-            }
+            break;
           }
         }
-      };
-
-      const handleEncode = () => {
-        decGroup.classList.remove("has-error");
-        let encoding = document.getElementById("encoding").value;
-        decText.value = encodingCompressMapper[encoding](encText.value);
       }
+    };
 
-      const handleEither = () => {
-        if (encText.value) {
-          handleEncode();
-        } else {
-          handleDecode();
-        }
-      }
-
-      decText.addEventListener("input", handleDecode, false);
-      encText.addEventListener("input", handleEncode, false);
-      encodingSelect.addEventListener("change", handleEither, false);
+    const handleEncode = () => {
+      decGroup.classList.remove("has-error");
+      let encoding = document.getElementById("encoding").value;
+      decText.value = encodingCompressMapper[encoding](encText.value);
     }
-  )
-  ();
+
+    const handleEither = () => {
+      if (encText.value) {
+        handleEncode();
+      } else {
+        handleDecode();
+      }
+    }
+
+    decText.addEventListener("input", handleDecode, false);
+    encText.addEventListener("input", handleEncode, false);
+    encodingSelect.addEventListener("change", handleEither, false);
+
+    window.otp = (account, secret, digits = 6, period = 30, issuer = "") => {
+      const otp = new OTPAuth.TOTP({
+        issuer: issuer,
+        account: account,
+        secret: secret,
+        digits: digits,
+        period: period,
+      });
+      return otp.generate();
+    };
+  })();
 </script>
 </body>
 </html>
