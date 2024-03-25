@@ -103,10 +103,7 @@
         decGroup.classList.remove("has-error");
         encText.value = "";
         let encoding = document.getElementById("encoding").value;
-        console.log(encoding);
         encText.value = encodingDecompressMapper[encoding](decText.value);
-        console.log(encText.value);
-        console.log(decText.value);
         if (!encText.value) {
           for (let encoding in encodingDecompressMapper) {
             decGroup.classList.remove("has-error");
